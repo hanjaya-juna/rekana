@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REKANA — Sigap Bencana</title>
+<meta name="description" content="REKANA: katalog perlengkapan siaga, informasi cuaca, peringatan bencana, dan laporan kejadian masyarakat.">
+<meta name="theme-color" content="#22385a">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Lewati ke konten utama</a>
+
+<header class="site-header">
+  <div class="bar">
+    <a class="logo" href="#katalog" aria-label="REKANA, ke beranda">
+      <span class="logo-mark" aria-hidden="true">R</span>
+      <span class="logo-text"><span class="logo-name">REKA<strong>NA</strong></span><small>Sigap Bencana</small></span>
+    </a>
+
+    <nav class="main-nav" id="mainNav" aria-label="Menu utama">
+      <a href="#katalog" data-route="katalog">Katalog</a>
+      <a href="#informasi" data-route="informasi">Info Bencana</a>
+      <a href="#lapor" data-route="lapor">Lapor Kejadian</a>
+      <a href="#pembayaran" data-route="pembayaran">Pembayaran <span class="cart-badge" id="navCartCount" hidden>0</span></a>
+      <a href="#dashboard" data-route="dashboard" id="navDashboard" hidden>Dashboard Admin</a>
+    </nav>
+
+    <div class="auth-area">
+      <span class="connection" id="connectionBadge" title="Status koneksi data">Memuat…</span>
+      <button class="btn btn-ghost btn-sm" type="button" id="loginBtn">Masuk Admin</button>
+      <span class="admin-chip" id="adminChip" hidden></span>
+      <button class="btn btn-ghost btn-sm" type="button" id="logoutBtn" hidden>Keluar</button>
+    </div>
+  </div>
+</header>
+
+<div class="offline-bar" id="offlineBar" role="status" hidden></div>
+
+<main id="main">
+  <!-- ============================= KATALOG ============================= -->
+  <section class="view" id="v-katalog" aria-labelledby="title-katalog">
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="badge badge-hero" id="heroBadge">Memuat prakiraan…</span>
+        <h1 id="title-katalog">Siap sebelum hujan pertama</h1>
+        <p>Perlengkapan siaga, prakiraan cuaca, peringatan bencana, dan kabar kejadian di sekitar dalam satu tempat.</p>
+        <div class="hero-actions">
+          <a class="btn btn-gold" href="#informasi">Lihat info bencana</a>
+          <a class="btn btn-ghost-light" href="#lapor">Laporkan kejadian</a>
+        </div>
+      </div>
+      <div class="hero-side">
+        <p class="hero-side-label">Kewaspadaan 8 hari</p>
+        <div class="strip" id="heroStrip" aria-label="Level kewaspadaan delapan hari"></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2 class="sec">Katalog perlengkapan</h2>
+        <p class="muted">Pilih perlengkapan yang sesuai, lalu pesan melalui WhatsApp.</p>
+      </div>
+      <span class="badge" id="catalogSource">Data MySQL</span>
+    </div>
+
+    <div class="tools">
+      <label class="field field-grow">
+        <span>Cari produk</span>
+        <input id="q" type="search" placeholder="Contoh: senter, P3K, air minum" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Urutkan</span>
+        <select id="sort">
+          <option value="featured">Unggulan dulu</option>
+          <option value="name">Nama A–Z</option>
+          <option value="priceAsc">Harga terendah</option>
+          <option value="priceDesc">Harga tertinggi</option>
+          <option value="stock">Stok terbanyak</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="chips" id="chips" role="group" aria-label="Filter kategori"></div>
+    <p class="count" id="count" aria-live="polite"></p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- ============================= INFO BENCANA ============================= -->
+  <section class="view" id="v-informasi" aria-labelledby="title-informasi">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Informasi publik</span>
+        <h1 id="title-informasi">Cuaca &amp; peringatan bencana</h1>
+        <p class="muted">Prakiraan delapan hari, peringatan aktif dari admin, dan kejadian yang sudah terverifikasi.</p>
+      </div>
+      <span class="badge" id="infoSource">Memuat data…</span>
+    </div>
+
+    <div class="warning-list" id="warningList" aria-live="polite"></div>
+
+    <div class="cols">
+      <div class="panel weather-today-panel">
+        <div class="panel-head">
+          <h2>Cuaca hari ini</h2>
+          <span class="eyebrow" id="todayDate"></span>
+        </div>
+        <div id="today" class="weather-today"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>7 hari ke depan</h2>
+          <span class="eyebrow">Prakiraan</span>
+        </div>
+        <div class="week" id="week"></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2 class="sec">Kejadian informasi</h2>
+        <p class="muted">Laporan masyarakat yang sudah diperiksa admin. Urut dari kejadian terbaru.</p>
+      </div>
+    </div>
+
+    <div class="tools">
+      <label class="field field-grow">
+        <span>Cari kejadian</span>
+        <input id="incidentSearch" type="search" placeholder="Cari judul, lokasi, atau ringkasan" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Jenis kejadian</span>
+        <select id="incidentFilter"><option value="Semua">Semua jenis</option></select>
+      </label>
+    </div>
+
+    <div class="news" id="incidentList"></div>
+  </section>
+
+  <!-- ============================= LAPOR KEJADIAN ============================= -->
+  <section class="view" id="v-lapor" aria-labelledby="title-lapor">
+    <div class="report-layout">
+      <div class="report-intro">
+        <span class="eyebrow">Partisipasi masyarakat</span>
+        <h1 id="title-lapor">Laporkan kejadian di sekitar Anda</h1>
+        <p class="lead">Bantu warga lain mengetahui kondisi terkini. Laporan akan diperiksa admin sebelum ditampilkan di halaman Info Bencana.</p>
+
+        <div class="callout">
+          <strong>Jangan gunakan formulir ini untuk keadaan darurat.</strong>
+          <p>Jika ada nyawa terancam, hubungi layanan darurat setempat terlebih dahulu.</p>
+        </div>
+
+        <ul class="check-list">
+          <li>Tulis lokasi sejelas mungkin (nama jalan, gang, atau patokan).</li>
+          <li>Jangan mencantumkan data pribadi orang lain.</li>
+          <li>Laporan tersimpan sebagai draf di perangkat ini. Bila koneksi terputus, laporan masuk antrean dan dikirim otomatis saat online.</li>
+        </ul>
+
+        <div class="queue-panel panel" id="queuePanel" hidden>
+          <div class="panel-head">
+            <h2>Antrean laporan di perangkat</h2>
+            <span class="badge badge-warning" id="queueCount">0</span>
+          </div>
+          <div id="queueList" class="queue-list"></div>
+          <button class="btn btn-alt btn-sm" type="button" id="syncQueueBtn">Coba kirim sekarang</button>
+        </div>
+      </div>
+
+      <form class="panel form" id="reportForm" novalidate>
+        <div class="form-head">
+          <h2>Formulir laporan</h2>
+          <span class="muted" id="draftStatus">Draf otomatis tersimpan saat Anda mengetik.</span>
+        </div>
+
+        <label for="r-title">Judul kejadian <span class="req">*</span></label>
+        <input id="r-title" name="title" maxlength="120" placeholder="Contoh: Genangan air di Gang Melati" autocomplete="off">
+        <p class="err" data-err="title"></p>
+
+        <div class="form-row">
+          <div>
+            <label for="r-type">Jenis kejadian <span class="req">*</span></label>
+            <select id="r-type" name="type">
+              <option value="">Pilih jenis</option>
+              <option>Banjir</option>
+              <option>Longsor</option>
+              <option>Gempa</option>
+              <option>Cuaca Ekstrem</option>
+              <option>Kebakaran</option>
+              <option>Lainnya</option>
+            </select>
+            <p class="err" data-err="type"></p>
+          </div>
+          <div>
+            <label for="r-occurredAt">Waktu kejadian</label>
+            <input id="r-occurredAt" name="occurredAt" type="datetime-local">
+            <p class="err" data-err="occurredAt"></p>
+          </div>
+        </div>
+
+        <label for="r-location">Lokasi <span class="req">*</span></label>
+        <input id="r-location" name="location" maxlength="120" placeholder="Nama jalan, kelurahan, atau patokan" autocomplete="off">
+        <p class="err" data-err="location"></p>
+
+        <label for="r-summary">Ringkasan kondisi <span class="req">*</span></label>
+        <textarea id="r-summary" name="summary" rows="4" maxlength="600" placeholder="Apa yang terjadi, seberapa parah, dan bantuan apa yang dibutuhkan?"></textarea>
+        <p class="err" data-err="summary"></p>
+
+        <div class="form-row">
+          <div>
+            <label for="r-reporterName">Nama pelapor <span class="muted">(opsional)</span></label>
+            <input id="r-reporterName" name="reporterName" maxlength="80" autocomplete="name">
+            <p class="err" data-err="reporterName"></p>
+          </div>
+          <div>
+            <label for="r-reporterContact">Kontak <span class="muted">(opsional)</span></label>
+            <input id="r-reporterContact" name="reporterContact" maxlength="80" placeholder="Nomor WA atau email" autocomplete="tel">
+            <p class="err" data-err="reporterContact"></p>
+          </div>
+        </div>
+
+        <details class="coords">
+          <summary>Titik koordinat (opsional)</summary>
+          <p class="hint">Isi keduanya atau kosongkan keduanya. Contoh dari peta: -7.250000, 112.750000.</p>
+          <div class="form-row">
+            <div>
+              <label for="r-lat">Latitude</label>
+              <input id="r-lat" name="lat" type="number" step="0.000001" min="-90" max="90" placeholder="-7.250000">
+              <p class="err" data-err="lat"></p>
+            </div>
+            <div>
+              <label for="r-lng">Longitude</label>
+              <input id="r-lng" name="lng" type="number" step="0.000001" min="-180" max="180" placeholder="112.750000">
+              <p class="err" data-err="lng"></p>
+            </div>
+          </div>
+        </details>
+
+        <p class="form-note">Dengan mengirim laporan, Anda menyatakan informasi ini benar sejauh yang Anda ketahui.</p>
+        <p class="err err-box" id="reportError" role="alert"></p>
+        <div class="form-actions">
+          <button class="btn" type="submit" id="reportSubmit">Kirim laporan</button>
+          <button class="btn btn-ghost" type="button" id="clearDraftBtn">Hapus draf</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================= PEMBAYARAN ============================= -->
+  <section class="view" id="v-pembayaran" aria-labelledby="title-pembayaran">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow">Transaksi manual</span>
+        <h1 id="title-pembayaran">Pesan perlengkapan siaga</h1>
+        <p class="muted">Tambahkan produk dari katalog, isi data pemesan, lalu pilih metode pembayaran. Admin akan memverifikasi pembayaran secara manual.</p>
+      </div>
+      <span class="badge badge-warning">Tanpa payment gateway</span>
+    </div>
+
+    <div class="payment-layout">
+      <div class="payment-main">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Keranjang</h2>
+              <p class="muted">Stok akhir diperiksa kembali saat admin memverifikasi pembayaran.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" type="button" id="clearCartBtn">Kosongkan</button>
+          </div>
+          <div id="cartList" class="cart-list"></div>
+        </section>
+
+        <form class="panel form" id="checkoutForm" novalidate>
+          <div class="form-head">
+            <h2>Data pemesan</h2>
+            <span class="muted">Kolom bertanda <span class="req">*</span> wajib diisi.</span>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="co-name">Nama lengkap <span class="req">*</span></label>
+              <input id="co-name" name="customerName" maxlength="80" autocomplete="name">
+              <p class="err" data-err="customerName"></p>
+            </div>
+            <div>
+              <label for="co-contact">WhatsApp / kontak <span class="req">*</span></label>
+              <input id="co-contact" name="customerContact" maxlength="80" placeholder="08xxxx atau nama@email.com" autocomplete="tel">
+              <p class="err" data-err="customerContact"></p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="co-delivery">Cara menerima <span class="req">*</span></label>
+              <select id="co-delivery" name="deliveryMethod">
+                <option value="pickup">Ambil di posko</option>
+                <option value="delivery">Diantar ke alamat</option>
+              </select>
+              <p class="err" data-err="deliveryMethod"></p>
+            </div>
+            <div id="co-address-field" hidden>
+              <label for="co-address">Alamat pengantaran <span class="req">*</span></label>
+              <input id="co-address" name="address" maxlength="200" autocomplete="street-address">
+              <p class="err" data-err="address"></p>
+            </div>
+          </div>
+
+          <label for="co-note">Catatan <span class="muted">(opsional)</span></label>
+          <textarea id="co-note" name="note" rows="2" maxlength="300" placeholder="Contoh: ambil sore hari, hubungi lewat WhatsApp."></textarea>
+          <p class="err" data-err="note"></p>
+
+          <fieldset class="pay-methods">
+            <legend>Metode pembayaran <span class="req">*</span></legend>
+            <div id="payMethodOptions" class="pay-method-grid"></div>
+            <p class="err" data-err="paymentMethod"></p>
+          </fieldset>
+
+          <p class="form-note">Dengan membuat pesanan, Anda setuju pembayaran diverifikasi manual oleh admin. Kode pesanan akan muncul setelah pesanan dibuat.</p>
+          <p class="err err-box" id="checkoutError" role="alert"></p>
+          <div class="form-actions">
+            <button class="btn btn-gold" type="submit" id="checkoutSubmit">Buat pesanan</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="payment-side">
+        <section class="panel order-result" id="orderResult" hidden></section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Ringkasan</h2>
+            <span class="badge" id="cartSummaryCount">0 item</span>
+          </div>
+          <div id="cartSummary" class="cart-summary"></div>
+          <p class="pay-note" id="paymentInfoNote">Pembayaran diverifikasi manual oleh admin. Tidak ada payment gateway.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Cek status pesanan</h2>
+            <span class="eyebrow">Pemesan</span>
+          </div>
+          <form id="lookupForm" class="lookup-form" novalidate>
+            <label for="lookupCode">Kode pesanan</label>
+            <input id="lookupCode" maxlength="20" placeholder="RKN-000000-XXXXXX" autocomplete="off">
+            <p class="err" data-err="code"></p>
+            <label for="lookupContact">Kontak pemesan</label>
+            <input id="lookupContact" maxlength="80" placeholder="Nomor WhatsApp atau email" autocomplete="tel">
+            <p class="err" data-err="contact"></p>
+            <p class="err err-box" id="lookupError" role="alert"></p>
+            <div class="form-actions">
+              <button class="btn btn-alt btn-sm" type="submit" id="lookupSubmit">Cek status</button>
+            </div>
+          </form>
+          <div id="lookupResult" class="lookup-result" hidden></div>
+        </section>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================= DASHBOARD ADMIN ============================= -->
+  <section class="view" id="v-dashboard" aria-labelledby="title-dashboard">
+    <div class="admin-gate panel" id="adminGate" hidden>
+      <span class="lock-mark" aria-hidden="true">🔒</span>
+      <h1 id="title-dashboard">Dashboard admin</h1>
+      <p>Halaman ini dipakai admin untuk mengubah cuaca, peringatan bencana, produk, dan memeriksa laporan masyarakat.</p>
+      <p class="note">Hanya akun admin yang dapat menyimpan perubahan. Data publik tetap dapat dibaca tanpa masuk.</p>
+      <button class="btn" type="button" id="gateLogin">Masuk sebagai admin</button>
+    </div>
+
+    <div id="adminArea" hidden>
+      <div class="page-head">
+        <div>
+          <span class="eyebrow">Panel pengelola</span>
+          <h1>Dashboard admin</h1>
+          <p class="muted">Perubahan di panel ini disimpan ke MySQL. Cache localStorage hanya untuk mempercepat tampilan publik.</p>
+        </div>
+        <div class="admin-identity">
+          <span class="badge badge-success">MySQL</span>
+          <span id="adminIdentity"></span>
+        </div>
+      </div>
+
+      <div class="admin-tabs" role="tablist" aria-label="Bagian dashboard">
+        <button type="button" role="tab" id="tabbtn-ringkasan" aria-controls="tab-ringkasan" aria-selected="true" data-tab="ringkasan">Ringkasan</button>
+        <button type="button" role="tab" id="tabbtn-cuaca" aria-controls="tab-cuaca" aria-selected="false" data-tab="cuaca">Cuaca</button>
+        <button type="button" role="tab" id="tabbtn-peringatan" aria-controls="tab-peringatan" aria-selected="false" data-tab="peringatan">Peringatan <span class="tab-count" id="tabWarnCount">0</span></button>
+        <button type="button" role="tab" id="tabbtn-kejadian" aria-controls="tab-kejadian" aria-selected="false" data-tab="kejadian">Kejadian <span class="tab-count" id="tabIncidentCount">0</span></button>
+        <button type="button" role="tab" id="tabbtn-produk" aria-controls="tab-produk" aria-selected="false" data-tab="produk">Produk</button>
+        <button type="button" role="tab" id="tabbtn-transaksi" aria-controls="tab-transaksi" aria-selected="false" data-tab="transaksi">Transaksi <span class="tab-count" id="tabTxCount">0</span></button>
+        <button type="button" role="tab" id="tabbtn-kategori" aria-controls="tab-kategori" aria-selected="false" data-tab="kategori">Kategori</button>
+      </div>
+
+      <section class="admin-tab" id="tab-ringkasan" role="tabpanel" aria-labelledby="tabbtn-ringkasan">
+        <div class="stats" id="stats"></div>
+        <div class="cols top-gap">
+          <div class="panel">
+            <div class="panel-head"><h2>Produk per kategori</h2><span class="eyebrow">Stok gudang</span></div>
+            <div class="bars" id="catBars"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Cuaca &amp; laporan hari ini</h2><span class="eyebrow">Ringkas</span></div>
+            <div id="dashSummary"></div>
+          </div>
+        </div>
+        <div class="callout top-gap">
+          <strong>Catatan penyimpanan</strong>
+          <p>Data utama berada di MySQL. Salinan publik terakhir disimpan di <code>localStorage</code> perangkat ini agar halaman tetap bisa dibaca saat server atau koneksi terputus.</p>
+        </div>
+      </section>
+
+      <section class="admin-tab" id="tab-cuaca" role="tabpanel" aria-labelledby="tabbtn-cuaca" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Ubah prakiraan cuaca</h2>
+              <p class="muted">Hanya admin yang dapat menyimpan perubahan ini. Delapan baris pertama adalah hari ini hingga tujuh hari ke depan.</p>
+            </div>
+            <span class="admin-only">Khusus admin</span>
+          </div>
+          <form id="weatherForm" novalidate>
+            <div class="weather-editor" id="weatherEditor"></div>
+            <p class="err err-box" id="weatherError" role="alert"></p>
+            <div class="form-actions">
+              <button class="btn" type="submit">Simpan prakiraan ke MySQL</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="admin-tab" id="tab-peringatan" role="tabpanel" aria-labelledby="tabbtn-peringatan" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="sec">Peringatan bencana</h2>
+            <p class="muted">Peringatan aktif dan dalam rentang waktu akan tampil di halaman publik.</p>
+          </div>
+          <button class="btn" type="button" id="addWarningBtn">Tambah peringatan</button>
+        </div>
+        <div id="warningAdminList" class="warning-admin-list"></div>
+      </section>
+
+      <section class="admin-tab" id="tab-kejadian" role="tabpanel" aria-labelledby="tabbtn-kejadian" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="sec">Moderasi kejadian informasi</h2>
+            <p class="muted">Laporan masyarakat berstatus menunggu sampai admin mempublikasikannya.</p>
+          </div>
+          <span class="badge" id="incidentAdminCount">0 laporan</span>
+        </div>
+        <div class="tools">
+          <label class="field field-grow">
+            <span>Cari laporan</span>
+            <input id="modSearch" type="search" placeholder="Cari judul, pelapor, atau lokasi" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="modStatus">
+              <option value="all">Semua status</option>
+              <option value="pending">Menunggu</option>
+              <option value="published">Terbit</option>
+              <option value="rejected">Ditolak</option>
+            </select>
+          </label>
+        </div>
+        <div id="moderationList" class="moderation-list"></div>
+      </section>
+
+      <section class="admin-tab" id="tab-produk" role="tabpanel" aria-labelledby="tabbtn-produk" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="sec">Kelola produk</h2>
+            <p class="muted">Tambah, ubah, atau hapus perlengkapan siaga.</p>
+          </div>
+          <button class="btn" type="button" id="addProductBtn">Tambah produk</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Produk</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Unggulan</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="productRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-tab" id="tab-transaksi" role="tabpanel" aria-labelledby="tabbtn-transaksi" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="sec">Verifikasi transaksi</h2>
+            <p class="muted">Pesanan publik masuk sebagai menunggu. Verifikasi akan mengurangi stok; pembatalan mengembalikan stok bila transaksi sudah terverifikasi.</p>
+          </div>
+          <span class="badge" id="txAdminCount">0 transaksi</span>
+        </div>
+        <div class="tools">
+          <label class="field field-grow">
+            <span>Cari transaksi</span>
+            <input id="txSearch" type="search" placeholder="Cari kode, nama, atau kontak" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="txStatus">
+              <option value="all">Semua status</option>
+              <option value="pending">Menunggu</option>
+              <option value="verified">Terverifikasi</option>
+              <option value="cancelled">Dibatalkan</option>
+            </select>
+          </label>
+        </div>
+        <div id="transactionAdminList" class="tx-admin-list"></div>
+      </section>
+
+      <section class="admin-tab" id="tab-kategori" role="tabpanel" aria-labelledby="tabbtn-kategori" hidden>
+        <div class="section-head">
+          <div>
+            <h2 class="sec">Kelola kategori</h2>
+            <p class="muted">Kategori yang masih dipakai produk tidak dapat dihapus.</p>
+          </div>
+        </div>
+        <div class="cols">
+          <form class="panel form" id="categoryForm" novalidate>
+            <div class="form-head">
+              <h2 id="categoryFormTitle">Tambah kategori</h2>
+              <button class="btn btn-ghost btn-sm" type="button" id="cancelCategoryEdit" hidden>Batal edit</button>
+            </div>
+            <label for="c-name">Nama kategori</label>
+            <input id="c-name" maxlength="50" placeholder="Contoh: Alat Komunikasi" autocomplete="off">
+            <p class="err" data-err="name"></p>
+            <label for="c-color">Warna penanda</label>
+            <input id="c-color" type="color" value="#22385a">
+            <p class="err" data-err="color"></p>
+            <p class="err err-box" id="categoryError" role="alert"></p>
+            <div class="form-actions"><button class="btn" type="submit" id="categorySubmit">Tambah kategori</button></div>
+          </form>
+          <div class="panel">
+            <div class="panel-head"><h2>Daftar kategori</h2><span class="badge" id="categoryCount">0</span></div>
+            <div id="categoryList" class="category-list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <strong>REKANA</strong>
+      <p>Katalog siaga bencana dan informasi kejadian. Data cuaca serta peringatan dikelola admin melalui MySQL.</p>
+    </div>
+    <p class="footer-note">Data contoh untuk latihan. Bukan pengganti informasi resmi pemerintah. Cache publik tersimpan di localStorage perangkat.</p>
+  </div>
+</footer>
+
+<!-- ============================= DIALOG ============================= -->
+<dialog id="loginDialog" aria-labelledby="loginTitle">
+  <form id="loginForm" novalidate>
+    <div class="dialog-head">
+      <h2 id="loginTitle">Masuk admin</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <p class="muted">Hanya admin yang dapat mengubah cuaca, peringatan bencana, produk, dan status laporan.</p>
+    <label for="loginUsername">Username</label>
+    <input id="loginUsername" name="username" autocomplete="username" maxlength="50" required aria-describedby="loginUsernameError">
+    <span class="err" id="loginUsernameError" data-err="username"></span>
+    <label for="loginPassword">Password</label>
+    <div class="password-field">
+      <input id="loginPassword" name="password" type="password" autocomplete="current-password" required aria-describedby="loginPasswordError loginCapsWarning">
+      <button class="password-toggle" type="button" id="loginPasswordToggle" aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M2.8 12S6.2 5.8 12 5.8 21.2 12 21.2 12 17.8 18.2 12 18.2 2.8 12 2.8 12Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="3.1" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path class="eye-slash" d="M4.2 19.8 19.8 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+    <span class="err" id="loginPasswordError" data-err="password"></span>
+    <span class="hint caps-warning" id="loginCapsWarning" role="status" hidden>Caps Lock aktif.</span>
+    <p class="err err-box" id="loginError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" data-close>Batal</button>
+      <button class="btn" type="submit" id="loginSubmit">Masuk</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="productDialog" aria-labelledby="productDialogTitle">
+  <form id="productForm" novalidate>
+    <div class="dialog-head">
+      <h2 id="productDialogTitle">Tambah produk</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <input type="hidden" id="p-id">
+    <label for="p-name">Nama produk</label>
+    <input id="p-name" maxlength="60" autocomplete="off">
+    <p class="err" data-err="name"></p>
+    <div class="form-row">
+      <div>
+        <label for="p-category">Kategori</label>
+        <select id="p-category"></select>
+        <p class="err" data-err="categoryId"></p>
+      </div>
+      <div>
+        <label for="p-price">Harga (Rp)</label>
+        <input id="p-price" type="number" min="0" step="1" inputmode="numeric">
+        <p class="err" data-err="price"></p>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="p-stock">Stok</label>
+        <input id="p-stock" type="number" min="0" step="1" inputmode="numeric">
+        <p class="err" data-err="stock"></p>
+      </div>
+      <div>
+        <label for="p-imageUrl">Alamat gambar <span class="muted">(opsional)</span></label>
+        <input id="p-imageUrl" maxlength="255" placeholder="assets/gambar.svg">
+        <p class="err" data-err="imageUrl"></p>
+      </div>
+    </div>
+    <label for="p-description">Deskripsi</label>
+    <textarea id="p-description" rows="3" maxlength="300"></textarea>
+    <p class="err" data-err="description"></p>
+    <label class="check-row"><input type="checkbox" id="p-featured"> Tandai sebagai produk unggulan</label>
+    <p class="err err-box" id="productError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" data-close>Batal</button>
+      <button class="btn" type="submit" id="productSubmit">Simpan produk</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="warningDialog" aria-labelledby="warningDialogTitle">
+  <form id="warningForm" novalidate>
+    <div class="dialog-head">
+      <h2 id="warningDialogTitle">Tambah peringatan</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <input type="hidden" id="w-id">
+    <label for="w-title">Judul peringatan</label>
+    <input id="w-title" maxlength="120" autocomplete="off">
+    <p class="err" data-err="title"></p>
+    <div class="form-row">
+      <div>
+        <label for="w-level">Level</label>
+        <select id="w-level">
+          <option>Waspada</option>
+          <option>Siaga</option>
+          <option>Awas</option>
+        </select>
+        <p class="err" data-err="level"></p>
+      </div>
+      <div>
+        <label for="w-area">Wilayah</label>
+        <input id="w-area" maxlength="100" placeholder="Contoh: Bantaran sungai">
+        <p class="err" data-err="area"></p>
+      </div>
+    </div>
+    <label for="w-message">Isi peringatan</label>
+    <textarea id="w-message" rows="3" maxlength="500"></textarea>
+    <p class="err" data-err="message"></p>
+    <div class="form-row">
+      <div>
+        <label for="w-startsAt">Mulai berlaku</label>
+        <input id="w-startsAt" type="datetime-local">
+        <p class="err" data-err="startsAt"></p>
+      </div>
+      <div>
+        <label for="w-endsAt">Berakhir <span class="muted">(opsional)</span></label>
+        <input id="w-endsAt" type="datetime-local">
+        <p class="err" data-err="endsAt"></p>
+      </div>
+    </div>
+    <label class="check-row"><input type="checkbox" id="w-active" checked> Aktifkan peringatan</label>
+    <p class="err err-box" id="warningError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" data-close>Batal</button>
+      <button class="btn" type="submit" id="warningSubmit">Simpan peringatan</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="transactionDialog" aria-labelledby="transactionDialogTitle">
+  <form id="transactionForm" novalidate>
+    <div class="dialog-head">
+      <h2 id="transactionDialogTitle">Verifikasi transaksi</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <input type="hidden" id="tx-id">
+    <input type="hidden" id="tx-action-status">
+    <div id="transactionDialogBody"></div>
+    <label for="tx-admin-note">Catatan admin <span class="muted">(opsional)</span></label>
+    <textarea id="tx-admin-note" rows="2" maxlength="300" placeholder="Contoh: bukti transfer sudah diterima."></textarea>
+    <p class="err err-box" id="transactionError" role="alert"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" type="button" data-close>Batal</button>
+      <button class="btn" type="submit" id="transactionSubmit">Verifikasi</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="confirmDialog" aria-labelledby="confirmTitle">
+  <form method="dialog">
+    <div class="dialog-head">
+      <h2 id="confirmTitle">Konfirmasi</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Tutup">×</button>
+    </div>
+    <p id="confirmMessage"></p>
+    <div class="form-actions">
+      <button class="btn btn-ghost" value="cancel">Batal</button>
+      <button class="btn btn-danger" value="ok">Ya, lanjutkan</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js" defer></script>
+</body>
+</html>
